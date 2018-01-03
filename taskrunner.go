@@ -4,7 +4,7 @@ import (
 	"sync"
 	"context"
 	"github.com/pkg/errors"
-	"github.com/satori/uuid"
+	"github.com/satori/go.uuid"
 )
 
 var (

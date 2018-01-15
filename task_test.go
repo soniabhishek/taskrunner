@@ -9,7 +9,7 @@ import (
 
 func TestSampleTask(t *testing.T)  {
 	ch := make(chan int, 5000)
-	fn := func(ctx context.Context, mtr *Task) {
+	fn := func(ctx context.Context, mtr Task) {
 		for{
 			num := <-ch
 			mtr.AddMeta(strconv.Itoa(num), nil)

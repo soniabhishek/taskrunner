@@ -73,7 +73,7 @@ func (tm *TaskManager) done(taskid string) {
 }
 
 func (tm *TaskManager) GO(fn runnable) (taskId string, err error) {
-	if tm.IsOpen() {
+	if tm.open {
 		taskId = uuid.NewV4().String()
 		go func() {
 			ctx,cancel := context.WithCancel(context.Background())

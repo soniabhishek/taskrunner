@@ -10,6 +10,7 @@ import (
 var (
 	ErrorKeyAlreadyExistInMeta = errors.New("key already exist in meta")
 	ErrorKeyDidNotExistInMeta = errors.New("key is not present in meta")
+	ErrorTaskManagerIsHaulted = errors.New("task manager is shutting down")
 )
 
 type runnable func(ctx context.Context, meta *Task)
@@ -71,14 +72,17 @@ func (tm *TaskManager) done(taskid string) {
 	delete(tm.ledger, taskid)
 }
 
-func (tm *TaskManager) GO(fn runnable) string {
-	taskid := uuid.NewV4().String()
-	go func() {
-		ctx,cancel := context.WithCancel(context.Background())
-		fn(ctx, tm.addTask(cancel, taskid, fn))
-		tm.done(taskid)
-	}()
-	return taskid
+func (tm *TaskManager) GO(fn runnable) (taskId string, err error) {
+	if tm.IsOpen() {
+		taskId = uuid.NewV4().String()
+		go func() {
+			ctx,cancel := context.WithCancel(context.Background())
+			fn(ctx, tm.addTask(cancel, taskId, fn))
+			tm.done(taskId)
+		}()
+		return
+	}
+	return taskId, ErrorTaskManagerIsHaulted
 }
 
 func (tm *TaskManager) IsOpen() bool {
@@ -87,34 +91,48 @@ func (tm *TaskManager) IsOpen() bool {
 	return tm.open
 }
 
-func (tm *TaskManager) FindFromMeta(key string) *Task {
+func (tm *TaskManager) FindFromMeta(key string) (tasks []*Task) {
 	tm.RLock()
 	defer tm.RUnlock()
 
 	for lkey, led := range tm.ledger{
 		led.RLock()
 		if _, ok :=led.meta[key]; ok {
-			led.RUnlock()
-			return tm.ledger[lkey]
+			tasks = append(tasks, tm.ledger[lkey])
 		}
 		led.RUnlock()
 	}
-	return nil
+	return tasks
 }
 
 
 func (tm *TaskManager) CancelTaskFromMetaKey(key string) {
-	if task := tm.FindFromMeta(key); task != nil {
-		task.Cancel()
+	tm.Lock()
+	defer tm.Unlock()
+
+	for lkey, led := range tm.ledger {
+		led.RLock()
+		if _, ok :=led.meta[key]; ok {
+			tm.ledger[lkey].cancelFunc()
+		}
+		led.RUnlock()
 	}
 }
 
 
-func (tm *TaskManager) RestartTaskFromMetaKey(key string) {
-	if task := tm.FindFromMeta(key); task != nil {
-		source := task.source
-		task.Cancel()
-		tm.GO(source)
+func (tm *TaskManager) RestartTasksFromMetaKey(key string) {
+	tm.Lock()
+	defer tm.Unlock()
+
+	for lkey, led := range tm.ledger{
+		led.RLock()
+		if _, ok :=led.meta[key]; ok {
+			task := tm.ledger[lkey]
+			source := task.source
+			task.cancelFunc()
+			tm.GO(source)
+		}
+		led.RUnlock()
 	}
 }
 

@@ -5,6 +5,7 @@ import "context"
 func NewTaskManager() *TaskManager {
 	return &TaskManager{
 		ledger:make(map[string]*Task),
+		open:true,
 	}
 }
 

@@ -15,6 +15,7 @@ type TaskManager interface {
 	CancelTaskFromMetaKey(key string) (count int, err error)
 	FindFromMetaKey(key string) (tasks []Task)
 	IsOpen() bool
+	GetTasksCount() int
 }
 
 func newMetric(cancelFunc context.CancelFunc, fn runnable) Task {

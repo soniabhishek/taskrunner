@@ -35,9 +35,24 @@ func TestSampleTask(t *testing.T)  {
 		ch<-i
 	}
 	wg.Wait()
+
+	//check cancelling a task
 	wg.Add(1)
-	tm.CancelTaskFromMetaKey("1")
+	cnt, err := tm.CancelTaskFromMetaKey("1")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, cnt)
 	wg.Wait()
+	cnt = tm.GetTasksCount()
+	assert.Equal(t, 19, cnt)
+
+	//check restarting a task
+	wg.Add(2)
+	cnt, err = tm.RestartTasksFromMetaKey("2")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, cnt)
+	wg.Wait()
+	cnt = tm.GetTasksCount()
+	assert.Equal(t, 19, cnt)
 }
 
 func TestAddMeta(t *testing.T)  {

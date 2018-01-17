@@ -99,3 +99,8 @@ func (tm *taskManager) RestartTasksFromMetaKey(key string) (count int, err error
 	return
 }
 
+func (tm *taskManager) GetTasksCount() int {
+	tm.RLock()
+	tm.RUnlock()
+	return tm.count
+}

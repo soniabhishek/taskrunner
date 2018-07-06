@@ -35,11 +35,11 @@ func (tm *taskManager) done(taskid string) {
 	delete(tm.ledger, taskid)
 }
 
-func (tm *taskManager) GO(fn runnable) (taskId string, err error) {
+func (tm *taskManager) GO(ctx context.Context,fn runnable) (taskId string, err error) {
 	if tm.open {
 		taskId = uuid.NewV4().String()
 		go func() {
-			ctx,cancel := context.WithCancel(context.Background())
+			ctx,cancel := context.WithCancel(ctx)
 			fn(ctx, tm.addTask(cancel, taskId, fn))
 			tm.done(taskId)
 		}()

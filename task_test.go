@@ -1,38 +1,40 @@
 package taskrunner
 
 import (
-	"testing"
 	"context"
-	"time"
 	"strconv"
 	"sync"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSampleTask(t *testing.T)  {
+func TestSampleTask(t *testing.T) {
 	ch := make(chan int, 5000)
 	var wg sync.WaitGroup
 	fn := func(ctx context.Context, mtr Task) {
-		for{
+		for {
 			num := <-ch
 			mtr.AddMeta(strconv.Itoa(num), nil)
 			wg.Done()
-			tc := time.After(time.Second*10)
+			tc := time.After(time.Second * 10)
 			select {
 			case <-ctx.Done():
 				wg.Done()
 				return
-			case <-tc :
+			case <-tc:
 			}
 		}
 	}
 	tm := NewTaskManager()
-	for i:=0; i<20; i++ {
+	ctx := context.TODO()
+	for i := 0; i < 20; i++ {
 		wg.Add(1)
-		tm.GO(fn)
+		tm.GO(ctx, fn)
 	}
-	for i:=0; i<100; i++{
-		ch<-i
+	for i := 0; i < 100; i++ {
+		ch <- i
 	}
 	wg.Wait()
 
@@ -55,9 +57,9 @@ func TestSampleTask(t *testing.T)  {
 	assert.Equal(t, 19, cnt)
 }
 
-func TestAddMeta(t *testing.T)  {
+func TestAddMeta(t *testing.T) {
 	var wg sync.WaitGroup
-	fn := func(ctx context.Context, task Task){
+	fn := func(ctx context.Context, task Task) {
 		task.AddMeta("addMeta", "sampleMeta")
 		wg.Done()
 		for {
@@ -70,7 +72,8 @@ func TestAddMeta(t *testing.T)  {
 	}
 	tm := NewTaskManager()
 	wg.Add(1)
-	_, err := tm.GO(fn)
+	ctx := context.TODO()
+	_, err := tm.GO(ctx, fn)
 	assert.NoError(t, err)
 	wg.Wait()
 	tasks := tm.FindFromMetaKey("addMeta")
@@ -84,9 +87,9 @@ func TestAddMeta(t *testing.T)  {
 	wg.Wait()
 }
 
-func TestErrorCase(t *testing.T)  {
+func TestErrorCase(t *testing.T) {
 	var wg sync.WaitGroup
-	fn := func(ctx context.Context, task Task){
+	fn := func(ctx context.Context, task Task) {
 		task.AddMeta("addMeta", "sampleMeta")
 		wg.Done()
 		for {
@@ -99,7 +102,8 @@ func TestErrorCase(t *testing.T)  {
 	}
 	tm := NewTaskManager()
 	wg.Add(1)
-	_, err := tm.GO(fn)
+	ctx := context.TODO()
+	_, err := tm.GO(ctx, fn)
 	assert.NoError(t, err)
 	wg.Wait()
 	tasks := tm.FindFromMetaKey("addMeta")

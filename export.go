@@ -10,7 +10,7 @@ func NewTaskManager() TaskManager {
 }
 
 type TaskManager interface {
-	GO(fn runnable) (taskId string, err error)
+	GO(ctx context.Context, fn runnable) (taskId string, err error)
 	RestartTasksFromMetaKey(key string) (count int, err error)
 	CancelTaskFromMetaKey(key string) (count int, err error)
 	FindFromMetaKey(key string) (tasks []Task)

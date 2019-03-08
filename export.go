@@ -4,8 +4,8 @@ import "context"
 
 func NewTaskManager() TaskManager {
 	return &taskManager{
-		ledger:make(map[string]Task),
-		open:true,
+		ledger: make(map[string]Task),
+		open:   true,
 	}
 }
 
@@ -20,9 +20,9 @@ type TaskManager interface {
 
 func newMetric(cancelFunc context.CancelFunc, fn runnable) Task {
 	return &task{
-		cancelFunc:cancelFunc,
-		meta:make(map[string]interface{}),
-		source:fn,
+		cancelFunc: cancelFunc,
+		meta:       make(map[string]interface{}),
+		source:     fn,
 	}
 }
 

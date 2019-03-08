@@ -1,23 +1,24 @@
 package taskrunner
 
 import (
-	"sync"
 	"context"
 	"errors"
+	"sync"
 )
 
 var (
 	ErrorKeyAlreadyExistInMeta = errors.New("key already exist in meta")
-	ErrorKeyDidNotExistInMeta = errors.New("key is not present in meta")
+	ErrorKeyDidNotExistInMeta  = errors.New("key is not present in meta")
 )
+
 type task struct {
 	sync.RWMutex
 	cancelFunc context.CancelFunc
-	source runnable
-	meta map[string]interface{}
+	source     runnable
+	meta       map[string]interface{}
 }
 
-func (t *task) AddMeta(key string, val interface{}) error{
+func (t *task) AddMeta(key string, val interface{}) error {
 	t.Lock()
 	defer t.Unlock()
 	if _, ok := t.meta[key]; ok {
@@ -28,7 +29,7 @@ func (t *task) AddMeta(key string, val interface{}) error{
 	return nil
 }
 
-func (t *task) RemoveMeta(key string) error{
+func (t *task) RemoveMeta(key string) error {
 	t.Lock()
 	defer t.Unlock()
 	if _, ok := t.meta[key]; !ok {
@@ -38,13 +39,13 @@ func (t *task) RemoveMeta(key string) error{
 	return nil
 }
 
-func (t *task) Cancel(){
+func (t *task) Cancel() {
 	t.Lock()
 	defer t.Unlock()
 	t.cancelFunc()
 }
 
-func (t *task) GetMeta(key string) (val interface{}, ok bool){
+func (t *task) GetMeta(key string) (val interface{}, ok bool) {
 	t.RLock()
 	defer t.RUnlock()
 	val, ok = t.meta[key]
